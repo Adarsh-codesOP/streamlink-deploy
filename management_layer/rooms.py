@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 import database, models, schemas
+import os
 from auth import oauth2_scheme # Need to fix imports since auth.py depends on grpc_server config
 from jose import JWTError, jwt
 from grpc_server import SECRET_KEY, ALGORITHM
@@ -88,7 +89,8 @@ def block_user_from_room(room_id: int, user_to_block_id: int, reason: str = "Ban
     
 
     try:
-        r = redis.Redis(host='localhost', port=6379, db=0)
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        r = redis.from_url(redis_url, decode_responses=True)
         kick_message = json.dumps({
             "type": "system_kick",
             "user_id": user_to_block_id
