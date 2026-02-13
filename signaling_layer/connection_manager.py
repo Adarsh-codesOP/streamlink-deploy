@@ -6,9 +6,7 @@ class ConnectionManager:
     def __init__(self):
 
         self.active_connections: Dict[int, List[WebSocket]] = collections.defaultdict(list)
-
         self.socket_to_room: Dict[WebSocket, int] = {}
-
         self.socket_to_user: Dict[WebSocket, int] = {}
 
     async def connect(self, websocket: WebSocket, room_id: int, user_id: int):
