@@ -62,3 +62,4 @@ databases:
     databaseName: streamlink
     user: streamlink_user
     plan: free
+    region: ohio
