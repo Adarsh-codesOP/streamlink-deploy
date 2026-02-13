@@ -172,5 +172,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
 
 
 
+import os
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=True)
+    debug_mode = os.getenv("DEBUG", "false").lower() == "true"
+    uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=debug_mode)
