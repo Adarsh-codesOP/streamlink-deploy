@@ -55,6 +55,23 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
 
     await websocket.accept()
 
+    # --- DEBUGGING MODE: Minimal Echo Server ---
+    print(f"DEBUG: User {user_id} connecting to Room {room_id}")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            print(f"DEBUG: Received from {user_id}: {data}")
+            await websocket.send_text(f"Echo: {data}")
+    except WebSocketDisconnect:
+        print(f"DEBUG: User {user_id} disconnected")
+    except Exception as e:
+        print(f"DEBUG: CRITICAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        await websocket.close(code=1011)
+    
+    # --- ORIGINAL LOGIC COMMENTED OUT FOR DEBUGGING ---
+    """
     try:
         # Validate User with Management Layer
         allowed, reason = await grpc_client.validate_join(user_id, room_id)
@@ -152,6 +169,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
             await websocket.close(code=1011) # Internal Error
         except:
             pass # Socket might be already closed
+    """
+
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=True)
