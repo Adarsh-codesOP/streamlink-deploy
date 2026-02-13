@@ -16,8 +16,12 @@ class GrpcClient:
             response = self.stub.ValidateJoin(service_pb2.JoinRequest(user_id=user_id, room_id=room_id))
             return response.allowed, response.reason
         except grpc.RpcError as e:
-            print(f"gRPC Validation Failed: {e}")
-            return False, "Internal Error"
+            error_msg = f"gRPC Error: {e.details()} | Code: {e.code()}"
+            print(f"DEBUG: gRPC Validation Failed: {error_msg}")
+            return False, error_msg
+        except Exception as e:
+            print(f"DEBUG: Unknown Error in validate_join: {e}")
+            return False, f"Unknown Error: {str(e)}"
 
     async def user_joined(self, user_id: int, room_id: int):
         try:

@@ -160,11 +160,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
         })
 
     except Exception as e:
-        print(f"CRITICAL WEBSOCKET ERROR: {e}")
+        print(f"WEBSOCKET FAILURE: {e}")
         import traceback
         traceback.print_exc()
         try:
-            await websocket.close(code=1011) # Internal Error
+            # Shorten reason to fit WS limit (123 bytes)
+            reason_str = str(e)[:120]
+            await websocket.close(code=1011, reason=reason_str) 
         except:
             pass # Socket might be already closed
 
