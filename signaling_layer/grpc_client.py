@@ -6,6 +6,15 @@ import config
 class GrpcClient:
     def __init__(self):
         target = f"{config.MANAGEMENT_SERVICE_HOST}:{config.MANAGEMENT_SERVICE_PORT}"
+        
+        # Debug DNS Resolution
+        try:
+            import socket
+            ip = socket.gethostbyname(config.MANAGEMENT_SERVICE_HOST)
+            print(f"DEBUG: DNS Resolved {config.MANAGEMENT_SERVICE_HOST} -> {ip}")
+        except Exception as e:
+            print(f"CRITICAL: Check DNS failed for {config.MANAGEMENT_SERVICE_HOST}: {e}")
+
         if config.MANAGEMENT_SSL:
             print(f"DEBUG: Connecting to gRPC Service at {target} (SECURE)")
             creds = grpc.ssl_channel_credentials()
