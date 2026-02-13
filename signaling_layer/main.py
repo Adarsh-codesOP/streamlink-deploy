@@ -56,46 +56,46 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
     await websocket.accept()
 
     try:
-
+        # Validate User with Management Layer
         allowed, reason = await grpc_client.validate_join(user_id, room_id)
         if not allowed:
             print(f"Join Denied for User {user_id}: {reason}")
             await websocket.close(code=1008, reason=reason)
             return
 
-
+        # Connect to Room Manager
         await manager.connect(websocket, room_id, user_id)
         
-
+        # Subscribe to Redis Room Channel
         await redis_manager.subscribe(room_id)
 
-
+        # Notify Management Layer (Non-blocking attempt)
         try:
             await grpc_client.user_joined(user_id, room_id)
         except Exception as e:
             print(f"gRPC Join/Update Error: {e}")
 
-
+        # Send Initial State (Existing Users)
         active_user_ids = manager.get_active_users(room_id)
         await websocket.send_text(json.dumps({
             "type": "existing_users",
             "ids": active_user_ids
         }))
 
-
+        # Broadcast Join Details via Redis
         await redis_manager.publish(room_id, {
             "type": "user_joined",
             "user_id": user_id
         })
 
-
+        # Main WebSocket Loop
         while True:
             data = await websocket.receive_text()
             message_data = json.loads(data)
             
             msg_type = message_data.get("type")
 
-
+            # Chat Message
             if msg_type == "chat":
                 content = message_data.get("content")
                 
@@ -126,11 +126,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
                 await redis_manager.publish(room_id, payload)
 
     except WebSocketDisconnect:
-
         print(f"User {user_id} disconnected")
         manager.disconnect(websocket)
         
-
+        # Unsubscribe if room empty
         if manager.get_room_count(room_id) == 0:
             await redis_manager.unsubscribe(room_id)
 
@@ -139,11 +138,20 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
         except Exception as e:
             print(f"gRPC Leave Error: {e}")
             
-
+        # Notify others
         await redis_manager.publish(room_id, {
             "type": "user_left",
             "user_id": user_id
         })
+
+    except Exception as e:
+        print(f"CRITICAL WEBSOCKET ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            await websocket.close(code=1011) # Internal Error
+        except:
+            pass # Socket might be already closed
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=True)
