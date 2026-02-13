@@ -11,7 +11,9 @@ import auth, rooms
 import grpc_server
 import service_pb2_grpc
 
-models.Base.metadata.create_all(bind=database.engine)
+
+# models.Base.metadata.create_all(bind=database.engine) # Moved to startup event
+
 
 app = FastAPI(title="StreamLink Management Layer")
 
