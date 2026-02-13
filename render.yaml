@@ -6,8 +6,6 @@ services:
     region: ohio
     plan: free
     dockerContext: ./management_layer
-    buildCommand: docker build -t management_layer ./management_layer
-    startCommand: ./start.sh
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -30,7 +28,6 @@ services:
     region: ohio
     plan: free
     dockerContext: ./signaling_layer
-    buildCommand: docker build -t signaling_layer ./signaling_layer
     envVars:
       - key: SIGNALING_HOST
         value: 0.0.0.0
@@ -56,7 +53,7 @@ services:
     name: streamlink-redis
     region: ohio
     plan: free
-    ipAllowList: [] # Only allow internal connections
+    ipAllowList: []
 
 databases:
   - name: streamlink-db
