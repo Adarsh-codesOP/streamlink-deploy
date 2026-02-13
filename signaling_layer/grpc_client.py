@@ -6,7 +6,13 @@ import config
 class GrpcClient:
     def __init__(self):
         target = f"{config.MANAGEMENT_SERVICE_HOST}:{config.MANAGEMENT_SERVICE_PORT}"
-        self.channel = grpc.insecure_channel(target)
+        if config.MANAGEMENT_SSL:
+            print(f"DEBUG: Connecting to gRPC Service at {target} (SECURE)")
+            creds = grpc.ssl_channel_credentials()
+            self.channel = grpc.secure_channel(target, creds)
+        else:
+            print(f"DEBUG: Connecting to gRPC Service at {target} (INSECURE)")
+            self.channel = grpc.insecure_channel(target)
         self.stub = service_pb2_grpc.ManagementServiceStub(self.channel)
         print(f"gRPC Client connected to {target}")
 
