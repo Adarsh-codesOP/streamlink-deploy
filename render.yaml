@@ -6,6 +6,7 @@ services:
     region: ohio
     plan: free
     dockerContext: ./management_layer
+    dockerfilePath: ./management_layer/Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -28,6 +29,7 @@ services:
     region: ohio
     plan: free
     dockerContext: ./signaling_layer
+    dockerfilePath: ./signaling_layer/Dockerfile
     envVars:
       - key: SIGNALING_HOST
         value: 0.0.0.0
