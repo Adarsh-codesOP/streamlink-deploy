@@ -31,7 +31,13 @@ class GrpcClient:
             response = self.stub.ValidateJoin(service_pb2.JoinRequest(user_id=user_id, room_id=room_id))
             return response.allowed, response.reason
         except grpc.RpcError as e:
-            error_msg = f"gRPC Error: {e.details()} | Code: {e.code()}"
+            error_details = e.details()
+            if "DNS resolution failed" in error_details:
+                # Provide clearer error for user
+                error_msg = f"DNS Error: Host '{config.MANAGEMENT_SERVICE_HOST}' not found."
+            else:
+                error_msg = f"gRPC Error: {error_details} | Code: {e.code()}"
+            
             print(f"DEBUG: gRPC Validation Failed: {error_msg}")
             return False, error_msg
         except Exception as e:
