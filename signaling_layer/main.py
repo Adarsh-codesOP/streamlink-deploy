@@ -55,44 +55,38 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
 
     await websocket.accept()
 
-    # --- DEBUGGING MODE: Minimal Echo Server ---
-    print(f"DEBUG: User {user_id} connecting to Room {room_id}")
-    try:
-        while True:
-            data = await websocket.receive_text()
-            print(f"DEBUG: Received from {user_id}: {data}")
-            await websocket.send_text(f"Echo: {data}")
-    except WebSocketDisconnect:
-        print(f"DEBUG: User {user_id} disconnected")
-    except Exception as e:
-        print(f"DEBUG: CRITICAL ERROR: {e}")
-        import traceback
-        traceback.print_exc()
-        await websocket.close(code=1011)
-    
-    # --- ORIGINAL LOGIC COMMENTED OUT FOR DEBUGGING ---
-    """
     try:
         # Validate User with Management Layer
-        allowed, reason = await grpc_client.validate_join(user_id, room_id)
+        print(f"DEBUG: Validating join for user {user_id} in room {room_id}...")
+        try:
+            allowed, reason = await grpc_client.validate_join(user_id, room_id)
+            print(f"DEBUG: Validation result: allowed={allowed}, reason={reason}")
+        except Exception as e:
+            print(f"DEBUG: gRPC validate_join failed: {e}")
+            raise e
+
         if not allowed:
-            print(f"Join Denied for User {user_id}: {reason}")
+            print(f"DEBUG: Join Denied for User {user_id}: {reason}")
             await websocket.close(code=1008, reason=reason)
             return
 
         # Connect to Room Manager
+        print("DEBUG: Connecting to ConnectionManager...")
         await manager.connect(websocket, room_id, user_id)
         
         # Subscribe to Redis Room Channel
+        print("DEBUG: Subscribing to Redis...")
         await redis_manager.subscribe(room_id)
 
         # Notify Management Layer (Non-blocking attempt)
+        print("DEBUG: Notifying Management Layer (user_joined)...")
         try:
             await grpc_client.user_joined(user_id, room_id)
         except Exception as e:
-            print(f"gRPC Join/Update Error: {e}")
+            print(f"DEBUG: gRPC Join/Update Error: {e}")
 
         # Send Initial State (Existing Users)
+        print("DEBUG: Sending initial state...")
         active_user_ids = manager.get_active_users(room_id)
         await websocket.send_text(json.dumps({
             "type": "existing_users",
@@ -100,14 +94,18 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
         }))
 
         # Broadcast Join Details via Redis
+        print("DEBUG: Broadcasting user_joined to Redis...")
         await redis_manager.publish(room_id, {
             "type": "user_joined",
             "user_id": user_id
         })
 
+        print(f"DEBUG: User {user_id} successfully connected to Room {room_id}. Entering main loop.")
+
         # Main WebSocket Loop
         while True:
             data = await websocket.receive_text()
+            # print(f"DEBUG: Received data: {data}") # Optional: can be noisy
             message_data = json.loads(data)
             
             msg_type = message_data.get("type")
@@ -169,7 +167,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
             await websocket.close(code=1011) # Internal Error
         except:
             pass # Socket might be already closed
-    """
 
 
 
