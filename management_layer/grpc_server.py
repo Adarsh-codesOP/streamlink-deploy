@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import jwt
 
+import os
+
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-SECRET_KEY = "super-secret-key-change-this-in-production"
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-change-this-in-production")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 class ManagementService(service_pb2_grpc.ManagementServiceServicer):
     
