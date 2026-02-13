@@ -67,7 +67,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
 
         if not allowed:
             print(f"DEBUG: Join Denied for User {user_id}: {reason}")
-            await websocket.close(code=1008, reason=reason)
+            # Truncate reason to 120 chars to avoid ProtocolError (page limit 123 bytes)
+            reason_str = (reason[:120] + "...") if reason and len(reason) > 120 else reason
+            await websocket.close(code=1008, reason=reason_str)
             return
 
         # Connect to Room Manager
