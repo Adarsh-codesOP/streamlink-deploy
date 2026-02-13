@@ -17,9 +17,16 @@ import service_pb2_grpc
 
 app = FastAPI(title="StreamLink Management Layer")
 
+
+origins = [
+    "https://streamlink-deploy.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
