@@ -17,6 +17,9 @@ import service_pb2_grpc
 
 app = FastAPI(title="StreamLink Management Layer")
 
+# Create database tables if they don't exist
+models.Base.metadata.create_all(bind=database.engine)
+
 
 origins = [
     "https://streamlink-deploy.vercel.app",
