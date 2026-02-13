@@ -35,6 +35,10 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(rooms.router)
 
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "StreamLink Management Layer is running"}
+
 def run_grpc_server():
     """Runs the gRPC server in a separate thread."""
     print("Starting gRPC Server on :50051...")
